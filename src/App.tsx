@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent, type CSSProperties } from
 import AdminLogin from './AdminLogin'
 import './App.css'
 
-const API_URL = 'http://localhost:8788'
+const API_URL = "https://backend.psahil25103.workers.dev";
 
 interface Enquiry {
   id: number

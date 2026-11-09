@@ -5,7 +5,7 @@ interface AdminLoginProps {
   onLogin: () => void
 }
 
-const API_URL = 'http://localhost:8788'
+const API_URL = "https://backend.psahil25103.workers.dev";
 
 export default function AdminLogin({ onLogin }: AdminLoginProps) {
   const [password, setPassword] = useState('')
