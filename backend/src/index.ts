@@ -18,27 +18,33 @@ interface SessionPayload {
   exp: number;
 }
 
-const ALLOWED_ORIGIN = 'http://localhost:5173';
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'https://ra-mora.psahil25103.workers.dev',
+];
 const COOKIE_NAME = 'ramora_admin';
 const SESSION_DURATION = 8 * 60 * 60;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Credentials': 'true',
-  'Vary': 'Origin',
-};
+function corsHeaders(origin: string | null) {
+  return {
+    'Access-Control-Allow-Origin': origin || 'http://localhost:5173',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin',
+  };
+}
 
 function response(
   data: unknown,
   status = 200,
-  extraHeaders: Record<string, string> = {}
+  extraHeaders: Record<string, string> = {},
+  origin: string | null = null
 ): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      ...corsHeaders,
+      ...corsHeaders(origin),
       'Content-Type': 'application/json; charset=utf-8',
       ...extraHeaders,
     },
@@ -246,7 +252,7 @@ export default {
     // CORS origin verification
     const origin = request.headers.get('Origin');
 
-    if (origin && origin !== ALLOWED_ORIGIN) {
+    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
       return response(
         {
           success: false,
@@ -256,11 +262,17 @@ export default {
       );
     }
 
+    const respond = (
+      data: unknown,
+      status = 200,
+      extraHeaders: Record<string, string> = {}
+    ) => response(data, status, extraHeaders, origin);
+
     // Handle browser preflight requests
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders,
+        headers: corsHeaders(origin),
       });
     }
 
@@ -269,7 +281,7 @@ export default {
       path === '/api/health' &&
       request.method === 'GET'
     ) {
-      return response({
+      return respond({
         success: true,
         message: 'RA-MORA API is running!',
       });
@@ -293,7 +305,7 @@ export default {
           !validText(service, 100) ||
           !validText(message, 3000)
         ) {
-          return response(
+          return respond(
             {
               success: false,
               message: 'Please enter all fields correctly.',
@@ -305,7 +317,7 @@ export default {
         const cleanEmail = email.trim();
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-          return response(
+          return respond(
             {
               success: false,
               message: 'Please enter a valid email address.',
@@ -329,7 +341,7 @@ export default {
           )
           .run();
 
-        return response(
+        return respond(
           {
             success: true,
             message: 'Your enquiry has been submitted successfully!',
@@ -337,7 +349,7 @@ export default {
           201
         );
       } catch {
-        return response(
+        return respond(
           {
             success: false,
             message: 'Unable to process enquiry.',
@@ -356,7 +368,7 @@ export default {
         !env.SESSION_SECRET ||
         env.SESSION_SECRET.length < 32
       ) {
-        return response(
+        return respond(
           {
             success: false,
             message: 'Server configuration error.',
@@ -379,7 +391,7 @@ export default {
           typeof body.password !== 'string' ||
           body.password !== env.ADMIN_PASSWORD
         ) {
-          return response(
+          return respond(
             {
               success: false,
               message: 'Invalid password.',
@@ -392,7 +404,7 @@ export default {
           env.SESSION_SECRET
         );
 
-        return response(
+        return respond(
           {
             success: true,
             message: 'Admin login successful.',
@@ -403,7 +415,7 @@ export default {
           }
         );
       } catch {
-        return response(
+        return respond(
           {
             success: false,
             message: 'Login failed.',
@@ -418,7 +430,7 @@ export default {
       path === '/api/admin/logout' &&
       request.method === 'POST'
     ) {
-      return response(
+      return respond(
         {
           success: true,
           message: 'Logged out successfully.',
@@ -441,11 +453,11 @@ export default {
       );
 
       return authenticated
-        ? response({
+        ? respond({
             success: true,
             authenticated: true,
           })
-        : response(
+        : respond(
             {
               success: false,
               authenticated: false,
@@ -462,7 +474,7 @@ export default {
       );
 
       if (!authenticated) {
-        return response(
+        return respond(
           {
             success: false,
             message: 'Admin login required.',
@@ -493,12 +505,12 @@ export default {
             )
             .all();
 
-          return response({
+          return respond({
             success: true,
             enquiries: result.results,
           });
         } catch {
-          return response(
+          return respond(
             {
               success: false,
               message: 'Unable to fetch enquiries.',
@@ -528,7 +540,7 @@ export default {
             .run();
 
           if ((result.meta.changes ?? 0) === 0) {
-            return response(
+            return respond(
               {
                 success: false,
                 message: 'Enquiry not found.',
@@ -537,12 +549,12 @@ export default {
             );
           }
 
-          return response({
+          return respond({
             success: true,
             message: 'Enquiry deleted successfully.',
           });
         } catch {
-          return response(
+          return respond(
             {
               success: false,
               message: 'Unable to delete enquiry.',
@@ -553,7 +565,7 @@ export default {
       }
     }
 
-    return response(
+    return respond(
       {
         success: false,
         message: 'Route not found.',
