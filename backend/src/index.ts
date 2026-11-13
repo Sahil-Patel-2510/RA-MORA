@@ -20,7 +20,6 @@ interface SessionPayload {
 
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
-  'https://sahil-patel-2510.github.io',
   'https://ra-mora.psahil25103.workers.dev',
 ];
 const COOKIE_NAME = 'ramora_admin';
@@ -208,23 +207,25 @@ function cookieHeader(
   request: Request,
   value: string
 ): string {
-  const isSecure = new URL(request.url).protocol === 'https:';
-  const secure = isSecure ? '; Secure' : '';
-  const sameSite = isSecure ? 'None' : 'Strict';
+  const secure =
+    new URL(request.url).protocol === 'https:'
+      ? '; Secure'
+      : '';
 
   return (
-    `${COOKIE_NAME}=${value}; HttpOnly; SameSite=${sameSite}; ` +
+    `${COOKIE_NAME}=${value}; HttpOnly; SameSite=Strict; ` +
     `Path=/; Max-Age=${SESSION_DURATION}${secure}`
   );
 }
 
 function clearCookie(request: Request): string {
-  const isSecure = new URL(request.url).protocol === 'https:';
-  const secure = isSecure ? '; Secure' : '';
-  const sameSite = isSecure ? 'None' : 'Strict';
+  const secure =
+    new URL(request.url).protocol === 'https:'
+      ? '; Secure'
+      : '';
 
   return (
-    `${COOKIE_NAME}=; HttpOnly; SameSite=${sameSite}; ` +
+    `${COOKIE_NAME}=; HttpOnly; SameSite=Strict; ` +
     `Path=/; Max-Age=0${secure}`
   );
 }

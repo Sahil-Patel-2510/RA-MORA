@@ -54,11 +54,7 @@ function App() {
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, '')
-  const appPath = window.location.pathname.startsWith(basePath)
-    ? window.location.pathname.slice(basePath.length) || '/'
-    : window.location.pathname
-  const isAdminPage = appPath.replace(/\/+$/, '') === '/admin'
+  const isAdminPage = window.location.pathname.replace(/\/+$/, '') === '/admin'
 
   useEffect(() => {
     if (!isAdminPage) {
@@ -1231,7 +1227,7 @@ function App() {
         </p>
 
         <a
-          href={`${import.meta.env.BASE_URL}admin/`}
+          href="/admin"
           style={{
             color: 'inherit',
             opacity: 0.55,
